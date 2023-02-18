@@ -1,0 +1,11 @@
+version: '3'
+
+dotenv: ['.env', '{{.HOME}}/.env'] # cspell: disable-line
+
+tasks:
+  build:
+    cmds:
+      - go build -o server cmd/http/main.go
+  start:
+    cmds:
+      - go run cmd/http/main.go
