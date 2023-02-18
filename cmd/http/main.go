@@ -105,5 +105,11 @@ func main() {
 	app.Static("/", "/public")
 	app.Post("/contact", contactHandler)
 
+	app.Get("/healthcheck", func(c *fiber.Ctx) error { // cspell: disable-line
+		return c.JSON(struct {
+			Status string `json:"status"`
+		}{Status: "ok"})
+	})
+
 	app.Listen("0.0.0.0:" + port)
 }
