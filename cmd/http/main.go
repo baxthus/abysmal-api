@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 var (
@@ -110,6 +111,8 @@ func main() {
 			Status string `json:"status"`
 		}{Status: "ok"})
 	})
+
+	app.Use(cors.New())
 
 	app.Listen("0.0.0.0:" + port)
 }
