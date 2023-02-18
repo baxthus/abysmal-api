@@ -102,6 +102,7 @@ func contactHandler(c *fiber.Ctx) error {
 
 func main() {
 	app := fiber.New()
+	app.Use(cors.New())
 
 	app.Static("/", "/public")
 	app.Post("/contact", contactHandler)
@@ -112,7 +113,6 @@ func main() {
 		}{Status: "ok"})
 	})
 
-	app.Use(cors.New())
 
 	app.Listen("0.0.0.0:" + port)
 }
