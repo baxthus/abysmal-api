@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
+	"github.com/Abysm0xC/abysmal-api/pkg/types"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
@@ -17,26 +17,6 @@ var (
 	port           string = os.Getenv("PORT")
 	contactWebhook string = os.Getenv("CONTACT_WEBHOOK")
 )
-
-type contactResponse struct {
-	Success bool `json:"success"`
-}
-
-type contactEmbed struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Color       int32  `json:"color"`
-	Fields      []struct {
-		Name  string `json:"name"`
-		Value string `json:"value"`
-	} `json:"fields"`
-}
-
-type contactBody struct {
-	Username  string         `json:"username"`
-	AvatarURL string         `json:"avatar_url"`
-	Embeds    []contactEmbed `json:"embeds"`
-}
 
 func contactHandler(c *fiber.Ctx) error {
 	// request content -> struct
@@ -49,13 +29,13 @@ func contactHandler(c *fiber.Ctx) error {
 	err := c.BodyParser(content)
 	if err != nil {
 		c.Response().Header.SetStatusCode(fiber.StatusBadRequest)
-		return c.JSON(contactResponse{Success: false})
+		return c.JSON(types.ContactResponse{Success: false})
 	}
 
 	// embed
-	embed := contactEmbed{
+	embed := types.ContactEmbed{
 		Title:       "Contact Form",
-		Description: fmt.Sprintf("Form %s at <t:%s:f>", content.URL, strconv.Itoa(int(time.Now().Unix()))),
+		Description: fmt.Sprintf("Form %s at <t:%v:f>", content.URL, time.Now().Unix()),
 		Color:       13346551,
 		Fields: []struct {
 			Name  string `json:"name"`
@@ -67,7 +47,7 @@ func contactHandler(c *fiber.Ctx) error {
 			},
 			{
 				Name:  ":envelope: **Email**",
-				Value: fmt.Sprintf("`%s", content.Email),
+				Value: fmt.Sprintf("`%s`", content.Email),
 			},
 			{
 				Name:  ":page_facing_up: **Message**",
@@ -77,27 +57,27 @@ func contactHandler(c *fiber.Ctx) error {
 	}
 
 	// request body
-	body := contactBody{
+	body := types.ContactBody{
 		Username:  "Contact Form",
 		AvatarURL: "https://abysmal.eu.org/avatar.png",
-		Embeds:    []contactEmbed{embed},
+		Embeds:    []types.ContactEmbed{embed},
 	}
 
 	// body (struct) -> json
 	jsonBody, errJson := json.Marshal(body)
 	if errJson != nil {
 		c.Response().SetStatusCode(fiber.StatusInternalServerError)
-		return c.JSON(contactResponse{Success: false})
+		return c.JSON(types.ContactResponse{Success: false})
 	}
 
 	// make post request
 	_, errReq := http.Post(contactWebhook, "application/json", bytes.NewBuffer([]byte(jsonBody)))
 	if errReq != nil {
 		c.Response().Header.SetStatusCode(fiber.StatusInternalServerError)
-		return c.JSON(contactResponse{Success: false})
+		return c.JSON(types.ContactResponse{Success: false})
 	}
 
-	return c.JSON(contactResponse{Success: true})
+	return c.JSON(types.ContactResponse{Success: true})
 }
 
 func main() {
@@ -112,7 +92,6 @@ func main() {
 			Status string `json:"status"`
 		}{Status: "ok"})
 	})
-
 
 	app.Listen("0.0.0.0:" + port)
 }
