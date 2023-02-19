@@ -1,10 +1,10 @@
-package types
+package contact
 
-type ContactResponse struct {
+type Response struct {
 	Success bool `json:"success"`
 }
 
-type ContactEmbed struct {
+type Embed struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Color       int32  `json:"color"`
@@ -14,8 +14,8 @@ type ContactEmbed struct {
 	} `json:"fields"`
 }
 
-type ContactBody struct {
-	Username  string         `json:"username"`
-	AvatarURL string         `json:"avatar_url"`
-	Embeds    []ContactEmbed `json:"embeds"`
+type Body struct {
+	Username  string  `json:"username"`
+	AvatarURL string  `json:"avatar_url"`
+	Embeds    []Embed `json:"embeds"`
 }
