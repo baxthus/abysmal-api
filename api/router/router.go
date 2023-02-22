@@ -12,10 +12,7 @@ func Initialize() *fiber.App {
 	app := fiber.New()
 
 	app.Use(
-		cors.New(cors.Config{
-			AllowOrigins: "*",
-			AllowHeaders: "Origin, Content-Type, Accept",
-		}),
+		cors.New(),
 		compress.New(),
 		recover.New(),
 	)
