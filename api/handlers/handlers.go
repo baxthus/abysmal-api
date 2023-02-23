@@ -17,7 +17,7 @@ import (
 func Routes() *fiber.App {
 	app := fiber.New()
 
-	app.Get("/", ContactHandler)
+	app.Post("/contact", ContactHandler)
 	app.Get("/healthcheck", HealthCheckHandler) // cspell: disable-line
 
 	github := app.Group("/github")
