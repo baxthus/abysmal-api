@@ -44,7 +44,6 @@ func ContactHandler(c *fiber.Ctx) error {
 		return c.JSON(contact.Response{Success: false})
 	}
 
-	// embed
 	embed := contact.Embed{
 		Title:       "Contact Form",
 		Description: fmt.Sprintf("Form %s at <t:%v:f>", content.URL, time.Now().Unix()),
@@ -71,7 +70,7 @@ func ContactHandler(c *fiber.Ctx) error {
 	// request body
 	body := contact.Body{
 		Username:  "Contact Form",
-		AvatarURL: "https://abysmal.eu.org/avatar.png",
+		AvatarURL: env.AvatarURL,
 		Embeds:    []contact.Embed{embed},
 	}
 
@@ -83,11 +82,12 @@ func ContactHandler(c *fiber.Ctx) error {
 	}
 
 	// make post request
-	_, errReq := http.Post(env.ContactWebhook, "application/json", bytes.NewBuffer([]byte(jsonBody)))
+	res, errReq := http.Post(env.ContactWebhook, "application/json", bytes.NewBuffer([]byte(jsonBody)))
 	if errReq != nil {
 		c.Response().SetStatusCode(fiber.StatusInternalServerError)
 		return c.JSON(contact.Response{Success: false})
 	}
+	defer res.Body.Close()
 
 	return c.JSON(contact.Response{Success: true})
 }
@@ -151,14 +151,14 @@ func IpLoggerHandler(c *fiber.Ctx) error {
 		c.Response().SetStatusCode(fiber.StatusBadGateway)
 		return c.JSON(ipLogger.Response{Success: false})
 	}
+	defer res.Body.Close()
 
 	// res (json) -> struct
 	body, _ := io.ReadAll(res.Body)
 	var data ipLogger.Whois
 	json.Unmarshal(body, &data)
 
-	fmt.Println(data.IP)
-
+	// sometimes the api returns a 200 status code but the response is an error
 	if !data.Success {
 		c.Response().SetStatusCode(fiber.StatusBadGateway)
 		return c.JSON(ipLogger.Response{Success: false})
@@ -233,11 +233,12 @@ func IpLoggerHandler(c *fiber.Ctx) error {
 	}
 
 	// make post request
-	_, err = http.Post(env.LoggerWebhook, "application/json", bytes.NewBuffer([]byte(jsonWebhook)))
+	res, err = http.Post(env.LoggerWebhook, "application/json", bytes.NewBuffer([]byte(jsonWebhook)))
 	if err != nil {
 		c.Response().SetStatusCode(fiber.StatusBadGateway)
 		return c.JSON(ipLogger.Response{Success: false})
 	}
+	defer res.Body.Close()
 
 	// yes, that is what you think it is
 	return c.Redirect("https://youtu.be/dQw4w9WgXcQ", fiber.StatusSeeOther)
