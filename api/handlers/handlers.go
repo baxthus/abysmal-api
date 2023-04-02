@@ -12,6 +12,7 @@ import (
 
 	"github.com/Abysm0xC/abysmal-api/internal/env"
 	"github.com/Abysm0xC/abysmal-api/pkg/contact"
+	"github.com/Abysm0xC/abysmal-api/pkg/discord"
 	"github.com/Abysm0xC/abysmal-api/pkg/github"
 	ipLogger "github.com/Abysm0xC/abysmal-api/pkg/ipLogger"
 	"github.com/gofiber/fiber/v2"
@@ -20,8 +21,14 @@ import (
 func Routes() *fiber.App {
 	app := fiber.New()
 
+	// cspell: disable-next-line
+	app.Get("/healthcheck", func(c *fiber.Ctx) error {
+		return c.JSON(struct {
+			Status string `json:"status"`
+		}{Status: "ok"})
+	})
+
 	app.Post("/contact", ContactHandler)
-	app.Get("/healthcheck", HealthCheckHandler) // cspell: disable-line
 	app.Get("/iplogger", IpLoggerHandler)
 
 	github := app.Group("/github")
@@ -44,7 +51,7 @@ func ContactHandler(c *fiber.Ctx) error {
 		return c.JSON(contact.Response{Success: false})
 	}
 
-	embed := contact.Embed{
+	embed := discord.Embed{
 		Title:       "Contact Form",
 		Description: fmt.Sprintf("Form %s at <t:%v:f>", content.URL, time.Now().Unix()),
 		Color:       13346551,
@@ -68,10 +75,10 @@ func ContactHandler(c *fiber.Ctx) error {
 	}
 
 	// request body
-	body := contact.Body{
+	body := discord.Webhook{
 		Username:  "Contact Form",
 		AvatarURL: env.AvatarURL,
-		Embeds:    []contact.Embed{embed},
+		Embeds:    []discord.Embed{embed},
 	}
 
 	// body (struct) -> json
@@ -90,12 +97,6 @@ func ContactHandler(c *fiber.Ctx) error {
 	defer res.Body.Close()
 
 	return c.JSON(contact.Response{Success: true})
-}
-
-func HealthCheckHandler(c *fiber.Ctx) error {
-	return c.JSON(struct {
-		Status string `json:"status"`
-	}{Status: "ok"})
 }
 
 func GithubLatestCommit(c *fiber.Ctx) error {
@@ -181,12 +182,17 @@ func IpLoggerHandler(c *fiber.Ctx) error {
 		data.Timezone.ID, data.Timezone.UTC, data.Timezone.Offset,
 	)
 
-	embed := ipLogger.Embed{
+	embed := discord.Embed{
 		Title:       "__Abysmal IP Logger__",
 		Description: fmt.Sprintf("From: %s", c.BaseURL()),
-		Thumbnail:   ipLogger.EmbedThumbnail{URL: env.AvatarURL},
-		Color:       13346551,
-		Fields: []ipLogger.EmbedField{
+		Thumbnail: struct {
+			URL string `json:"url"`
+		}{URL: env.AvatarURL},
+		Color: 13346551,
+		Fields: []struct {
+			Name  string `json:"name"`
+			Value string `json:"value"`
+		}{
 			{
 				Name:  ":zap: **Main**",
 				Value: mainField,
@@ -207,9 +213,9 @@ func IpLoggerHandler(c *fiber.Ctx) error {
 		},
 	}
 
-	button := ipLogger.ComponentsRow{
+	button := discord.ComponentsRow{
 		Type: 1,
-		Components: []ipLogger.Component{{
+		Components: []discord.Component{{
 			Style:    5,
 			Label:    "Open location in Google Maps",
 			URL:      fmt.Sprintf("https://www.google.com/maps/search/?api=1&query=%v,%v", data.Latitude, data.Longitude),
@@ -218,11 +224,11 @@ func IpLoggerHandler(c *fiber.Ctx) error {
 		}},
 	}
 
-	webhook := ipLogger.Webhook{
+	webhook := discord.Webhook{
 		Username:   "Abysmal IP Logger",
 		AvatarURL:  env.AvatarURL,
-		Embeds:     []ipLogger.Embed{embed},
-		Components: []ipLogger.ComponentsRow{button},
+		Embeds:     []discord.Embed{embed},
+		Components: []discord.ComponentsRow{button},
 	}
 
 	// webhook (struct) -> json
