@@ -89,7 +89,7 @@ func ContactHandler(c *fiber.Ctx) error {
 	}
 
 	// make post request
-	res, errReq := http.Post(env.ContactWebhook, "application/json", bytes.NewBuffer([]byte(jsonBody)))
+	res, errReq := http.Post(env.ContactWebhook, "application/json", bytes.NewBuffer(jsonBody))
 	if errReq != nil {
 		c.Response().SetStatusCode(fiber.StatusInternalServerError)
 		return c.JSON(contact.Response{Success: false})
@@ -113,13 +113,12 @@ func GithubLatestCommit(c *fiber.Ctx) error {
 	}
 
 	if len(content.User) == 0 {
-		content.User = "Abysm0xC"
+		content.User = "baxthus"
 	}
 	if len(content.Branch) == 0 {
 		content.Branch = "main"
 	}
 
-	// get latest commit
 	res, err := http.Get(fmt.Sprintf("https://api.github.com/repos/%s/%s/git/refs/heads/%s", content.User, content.Repo, content.Branch))
 	if err != nil || res.StatusCode != 200 {
 		c.Response().SetStatusCode(fiber.StatusBadGateway)
@@ -239,7 +238,7 @@ func IpLoggerHandler(c *fiber.Ctx) error {
 	}
 
 	// make post request
-	res, err = http.Post(env.LoggerWebhook, "application/json", bytes.NewBuffer([]byte(jsonWebhook)))
+	res, err = http.Post(env.LoggerWebhook, "application/json", bytes.NewBuffer(jsonWebhook))
 	if err != nil {
 		c.Response().SetStatusCode(fiber.StatusBadGateway)
 		return c.JSON(ipLogger.Response{Success: false})
